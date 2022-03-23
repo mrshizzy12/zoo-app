@@ -10,14 +10,34 @@ class Animal:
         self.age = age
         self.feeding_record: list = []
         self.medical_record: list = []
-        self.enclosure = None
-        self.care_taker = None
+        #self.enclosure = None
+        #self.care_taker = None
         
     def feed(self) -> None:
         self.feeding_record.append(datetime.now())
         
     def vet(self) -> None:
         self.medical_record.append(datetime.now())
+        
+    def medical_schedule(self):
+        now = datetime.now()
+        last_medical_date = self.medical_record.pop()
+        if last_medical_date:
+            next_medical_date = (now - last_medical_date)
+            if next_medical_date >= 30:
+                return True
+            else:
+                return False
+    
+    def feeding_schedule(self):
+        now = datetime.now()
+        last_feeding_date = self.medical_record.pop()
+        if last_feeding_date:
+            next_feeding_date = (now - last_feeding_date)
+            if next_feeding_date >= 1:
+                return True
+            else:
+                return False 
     
     
 class Enclosure:
@@ -36,6 +56,16 @@ class Enclosure:
         
     def clean(self) -> None:
         self.clean_record.append(datetime.now())
+    
+    def cleaning_schedule(self):
+        now = datetime.now()
+        last_clean_date = self.clean_record.pop()
+        if last_clean_date:
+            next_clean_date = (now - last_clean_date)
+            if next_clean_date >= 2:
+                return True
+            else:
+                return False 
         
     def get_animal(self, id: str):
         for animal in self.animals:
@@ -54,6 +84,14 @@ class Employee:
         
     def add_animal(self, animal: Animal) -> None:
         self.animals_in_care.append(animal)
+        
+    def stat(self):
+        return {
+            'name': self.name,
+            'min': min(self.animals_in_care),
+            'max': max(self.animals_in_care),
+            'avg': sum(self.animals_in_care) / len(self.animals_in_care)
+        }
 
 class Zoo:
     def __init__(self) -> None:

@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from flask_restx import Api, Resource
 from utils import (ZooJsonEncoder, animal_parser,
                    enclosure_parser, employee_parser)
+from flask_cors import CORS
 import models
 
 zoo = models.Zoo()
@@ -10,7 +11,9 @@ zoo = models.Zoo()
 app = Flask(__name__)
 app.json_encoder = ZooJsonEncoder
 
-api = Api(app, title='Zoo API', description='A zoo management API.')
+api = Api(app, title='Zoo API', description='A zoo management API.', default_label='Zoo')
+
+cors = CORS(app)
 
 
 @api.route('/add_animal')
@@ -120,15 +123,15 @@ class GetAllAnimals(Resource):
 @api.route('/enclosure/<enclosure_id>/animal/<animal_id>/feed')
 @api.doc(params={'enclosure_id': 'Enclosure ID', 'animal_id': 'Animal ID'})
 class FeedAnimal(Resource):
-    """
-        Summary:
-            Feed an animal from enclosure
-            
-        Args:
-            enclosure_id: a string ID for getting an enclosure
-            animal_id: a string ID for getting an animal 
-    """
     def post(self, enclosure_id: str, animal_id: str):
+        """
+            Summary:
+                Feed an animal from enclosure
+                
+            Args:
+                enclosure_id: a string ID for getting an enclosure
+                animal_id: a string ID for getting an animal 
+        """
         enclosure = zoo.get_enclosure(enclosure_id)
         if enclosure:
             animal = enclosure.get_animal(animal_id)
@@ -183,7 +186,7 @@ class CleanEnclosure(Resource):
 @api.doc(params={'id': 'Enclosure ID'})
 class GetEnclosureAnimals(Resource):
     def get(self, id: str):
-        """"
+        """
             Summary:
                 Get all animal in an enclosure
             
@@ -296,9 +299,83 @@ class DeleteEmployee(Resource):
             return {'success': 'Employee deleted'}
         else:
             return {'404': f'Employee with ID {id} not found.'}
+        
+    
+@api.route('/employess/stats')
+class GetEmployeeStats(Resource):
+    def get(self):
+        """
+            Summary:
+                Get all employee stats
+
+            Returns:
+                _list_: Returns a lsit of employee stats 
+        """
+        employee_stats = [e.stat() for e in zoo.employees]
+        if employee_stats:
+            return jsonify(employee_stats)
+        else:
+            return {'404': 'there are no current employees'}
 
 
 
+@api.route('/tasks/feeding')
+class FeedingSchedule(Resource):
+    def get(self):
+        """
+            Summary:
+                Get all animals to be feed
+                
+            Returns:
+                _list_: returns a list of animals
+        """
+        data: list = []
+        animals = [a for a in zoo.animals if a.feeding_schedule == True]
+        
+        for a in animals:
+            c = {'animal': a.name, 'employee': random([em.name for em in zoo.employees])}
+            data.append(c)
+        return jsonify(data)
+
+
+@api.route('/tasks/cleaning')
+class CleaningSchedule(Resource):
+    def get(self):
+        """
+            Summary:
+                Get all enclosures to be cleaned
+                
+            Returns:
+                _list_: returns a list of enclosures
+        """
+        data: list = []
+        enclosures = [e for e in zoo.enclosures if e.cleaning_schedule == True]
+        
+        for e in enclosures:
+            c = {'enclosure': e.name, 'cleaner': random([em.name for em in zoo.employees])}
+            data.append(c)
+        return jsonify(data)
+    
+    
+@api.route('/tasks/medical')
+class MedicalSchedule(Resource):
+    def get(self):
+        """
+            Summary:
+                Get all animals to be medicated
+                
+            Returns:
+                _list_: returns a list of animals
+        """
+        animals = [a for a in zoo.animals if a.medical_schedule == True]
+        
+        if animals:
+            return jsonify(animals)
+        else:
+            return {'404': 'no animals to be medicated.'}
+    
+    
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -8,18 +8,25 @@ import models
 
 zoo = models.Zoo()
 
-app = Flask(__name__)
-app.json_encoder = ZooJsonEncoder
 
-api = Api(app, title='Zoo API', description='A zoo management API.', default_label='Zoo')
 
-cors = CORS(app)
+cors = CORS()
+api = Api()
+
+def create_app():
+    app = Flask(__name__)
+    app.json_encoder = ZooJsonEncoder
+    
+    cors.init_app(app)
+    api.init_app(app, title='Zoo API', description='A zoo management API.', default_label='Zoo')
+    
+    return app
 
 
 @api.route('/add_animal')
 class AddAnimal(Resource):
    
-    @api.doc(parser=animal_parser)
+    @api.doc(expect=[animal_parser])
     def post(self):
         """
             Summary:
@@ -146,7 +153,7 @@ class FeedAnimal(Resource):
 
 @api.route('/add_enclosure')
 class AddEnclosure(Resource):
-    @api.doc(parser=enclosure_parser)
+    @api.doc(expect=[enclosure_parser])
     def post(self):
         """
             Summery:
@@ -232,7 +239,7 @@ class Deleteclosure(Resource):
 
 @api.route('/add_employee')
 class AddEmployee(Resource):
-    @api.doc(parser=employee_parser)
+    @api.doc(expect=[employee_parser])
     def post(self):
         """
             Summary:
@@ -301,7 +308,7 @@ class DeleteEmployee(Resource):
             return {'404': f'Employee with ID {id} not found.'}
         
     
-@api.route('/employess/stats')
+@api.route('/employees/stats')
 class GetEmployeeStats(Resource):
     def get(self):
         """
@@ -378,4 +385,5 @@ class MedicalSchedule(Resource):
     
 
 if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)

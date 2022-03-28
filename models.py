@@ -86,12 +86,13 @@ class Employee:
         self.animals_in_care.append(animal)
         
     def stat(self):
-        return {
-            'name': self.name,
-            'min': min(self.animals_in_care),
-            'max': max(self.animals_in_care),
-            'avg': sum(self.animals_in_care) / len(self.animals_in_care)
-        }
+        if self.animals_in_care:
+            return {
+                'name': self.name,
+                'min': min(self.animals_in_care),
+                'max': max(self.animals_in_care),
+                'avg': sum(self.animals_in_care) / len(self.animals_in_care)
+            }
 
 class Zoo:
     def __init__(self) -> None:
